@@ -1,0 +1,56 @@
+version: "2"
+
+volumes:
+  peer2.network1.test.com:
+
+networks:
+  test:
+
+services:
+  couchdb2:
+      container_name: couchdb2
+      image: hyperledger/fabric-couchdb
+      environment:
+        - COUCHDB_USER=
+        - COUCHDB_PASSWORD=
+      ports:
+        - 7984:5984
+      networks:
+        - test
+        
+  peer2.network1.test.com:
+      container_name: peer2.network1.test.com
+      extends:
+        file: base.yaml
+        service: peer-base
+      environment:
+        - FABRIC_LOGGING_SPEC=info
+        - ORDERER_GENERAL_LOGLEVEL=info
+        - CORE_PEER_LOCALMSPID=network1MSP
+        - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=artifacts_test
+        - CORE_PEER_ID=peer2.network1.test.com
+        - CORE_PEER_ADDRESS=peer2.network1.test.com:9051
+        - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+        - CORE_PEER_CHAINCODEADDRESS=peer2.network1.test.com:9052
+        - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+        - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2.network1.test.com:9051
+        - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.network1.test.com:8051
+        - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb2:5984
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+        - CORE_METRICS_PROVIDER=prometheus
+        - CORE_PEER_TLS_ENABLED=true
+        - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto/peer/tls/server.crt
+        - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto/peer/tls/server.key
+        - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto/peer/tls/ca.crt
+        - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto/peer/msp
+      ports:
+        - 9051:9051
+      volumes:
+        - ./channel/crypto-config/peerOrganizations/network1.test.com/peers/peer2.network1.test.com/msp:/etc/hyperledger/crypto/peer/msp
+        - ./channel/crypto-config/peerOrganizations/network1.test.com/peers/peer2.network1.test.com/tls:/etc/hyperledger/crypto/peer/tls
+        - /var/run/:/host/var/run/
+        - ./channel/:/etc/hyperledger/channel/
+      networks:
+        - test
